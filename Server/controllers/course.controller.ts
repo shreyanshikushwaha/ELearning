@@ -244,8 +244,8 @@ export const addAnswer = CatchAsyncError(async (req: Request, res: Response, nex
         }
 
         //add this answer to repliesarray
-
         question.questionReplies.push(newAnswer);
+        
         await course?.save();
         if (req.user?._id === question.user._id) {
             //create a notification
