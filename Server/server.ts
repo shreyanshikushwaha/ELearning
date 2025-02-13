@@ -33,5 +33,5 @@ initializeSocket(io);
 console.log(process.env.PORT);
 httpServer.listen(process.env.PORT, () => {
     console.log(`server is conected with port ${process.env.PORT}`);
-    // connectDB();//calling connect db function
+    connectDB();//calling connect db function
 })

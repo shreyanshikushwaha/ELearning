@@ -75,7 +75,6 @@ userSchema.pre<IUser>('save', async function (next) {
 })
 
 //sign our access token -  whem user log in craete a access token ,if reload or acess to itsself so simple compare the token
-
 userSchema.methods.SignAccessToken = function (){
     return jwt.sign({id: this._id},process.env.ACCESS_TOKEN  || ' ',{
         expiresIn:"5m",
@@ -88,6 +87,7 @@ userSchema.methods.SignRefreshToken = function(){
         expiresIn:"3d",
     });
 }
+
 //compare pswrd
 userSchema.methods.comparePassword = async function (enteredPassword: string): Promise<boolean> {
     return await bcrypt.compare(enteredPassword, this.password);

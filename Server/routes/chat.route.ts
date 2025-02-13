@@ -1,8 +1,9 @@
 import  express  from "express";
-import { ListReccomendedMentors,Chats } from "../controllers/chat.controller";
+import { ListRecommendedMentors,Chats,AddMentors } from "../controllers/chat.controller";
 const chatRouter = express.Router();
 
-chatRouter.get("/see-all-Mentors",ListReccomendedMentors);
+chatRouter.get("/see-all-Mentors",ListRecommendedMentors);
 chatRouter.get("/chats",Chats);
+chatRouter.post("/createMentor",AddMentors);
 
 export default chatRouter;
