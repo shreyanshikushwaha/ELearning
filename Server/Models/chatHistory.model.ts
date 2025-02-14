@@ -1,23 +1,35 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
-export interface IChat extends Document {
-  chatId: string;
-  participants: mongoose.Types.ObjectId[];
-  isGroup: boolean;
-  groupName?: string;
-  messages: mongoose.Types.ObjectId[];
+export interface IChatHistory extends Document {
+    Id: string;
+    userId: mongoose.Types.ObjectId[];
+    chats: mongoose.Types.ObjectId[];
 }
 
-const ChatSchema: Schema = new Schema(
-  {
-    chatId: { type: String, required: true, unique: true, index: true },
-    participants: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }],
-    isGroup: { type: Boolean, default: false },
-    groupName: { type: String, default: null },
-    messages: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Message' }]
-  },
-  { timestamps: true }
+const generateChatId = (): string => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let chatId = '';
+    for (let i = 0; i < 5; i++) {
+        chatId += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return chatId;
+};
+
+const ChatHistorySchema: Schema = new Schema(
+    {
+        Id: { type: String, unique: true, index: true, generateChatId},
+        userId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users', required: true },
+        chats: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Chat' }]
+    },
+    { timestamps: true }
 );
 
-const Chat = mongoose.model<IChat>('Chat', ChatSchema);
-export default Chat;
+ChatHistorySchema.pre('save', async function (next) {
+    if (!this.chatId) {
+        this.chatId = generateChatId();
+    }
+    next();
+})
+
+const ChatHistory = mongoose.model<IChatHistory>('ChatHistory', ChatHistorySchema);
+export default ChatHistory;

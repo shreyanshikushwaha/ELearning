@@ -14,7 +14,7 @@ export interface IMessage extends Document {
 
 const MessageSchema: Schema = new Schema(
     {
-        chatId: { type: mongoose.Schema.Types.ObjectId, ref: 'Chat', required: true },
+        chatId: {type: String, ref: 'Chat', required: true },
         senderId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
         message: { type: String, required: true },
         messageType: { type: String, enum: ['text', 'image', 'video', 'file'], default: 'text' },
