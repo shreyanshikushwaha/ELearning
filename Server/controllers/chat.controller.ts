@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import ErrorHandler from "../utils/Errorhandler";
 import { CatchAsyncError } from "../midlleware/catchAsyncError";
-import { getRecommendedMentors, startChat, addMentor,createMessage } from "../Services/chat.service";
+import { getRecommendedMentors, startChat, addMentor,createMessage, getChatRecords } from "../Services/chat.service";
 
 export const AddMentors = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -59,6 +59,22 @@ export const Chats = CatchAsyncError(async (req: Request, res: Response, next: N
     }
 });
 
+export const onGetChatsRecords = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { userId } = req.body;
+        if (!userId) {
+            return res.status(400).json({ message: "UserID is required." });
+        }
+        const chatRecords = await getChatRecords(userId, res);
+        res.status(201).json({
+            success : "true",
+            chatRecords
+        })
+
+    } catch (error: any) {
+        return next(new ErrorHandler(error.message, 500));
+    }
+});
 
 export const onSendMessage = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
     try {

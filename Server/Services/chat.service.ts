@@ -4,6 +4,7 @@ import Message from "../Models/message.model";
 import ChatHistory from "../Models/chatHistory.model";
 import { Response } from "express";
 import { CatchAsyncError } from "../midlleware/catchAsyncError";
+import mongoose from "mongoose";
 
 export const addMentor = async (body: any, res: any) => {
     const { username, email, password } = body;
@@ -14,6 +15,15 @@ export const addMentor = async (body: any, res: any) => {
     }
     const createdUser = await Users.create({ username, email, password });
     return createdUser;
+};
+
+export const getChatRecords = async (userId: string, res: any) => {
+    const chatRecords = await Chat.findOne({ userId: new mongoose.Types.ObjectId(userId) });
+    console.log(chatRecords)
+    if (!chatRecords) {
+        return res.status(404).json({ message: "No Chat Record." });
+    }
+    return chatRecords;
 };
 
 
@@ -56,6 +66,7 @@ export const startChat = async (data: { senderId: any, receiverId: any }, res: R
             }
             senderChatHistory.chats.push(chat._id);
             await senderChatHistory.save();
+            console.log('senderhis',senderChatHistory)
 
             let receiverChatHistory = await ChatHistory.findOne({ userId: receiverId });
             if (!receiverChatHistory) {
@@ -64,10 +75,9 @@ export const startChat = async (data: { senderId: any, receiverId: any }, res: R
             }
             receiverChatHistory.chats.push(chat._id);
             await receiverChatHistory.save();
+            console.log('receverhis',receiverChatHistory)
         }
-
         return chat;
-
     } catch (error) {
         console.error("Error starting chat:", error);
         return res.status(500).json({ message: "Internal Server Error" });
