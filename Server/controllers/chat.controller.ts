@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import ErrorHandler from "../utils/Errorhandler";
 import { CatchAsyncError } from "../midlleware/catchAsyncError";
-import { getRecommendedMentors, startChat, addMentor,createMessage, getChatRecords } from "../Services/chat.service";
+import { getRecommendedMentors, startChat, addMentor,createMessage, getChatRecords, GetAllMessages } from "../Services/chat.service";
 
 export const AddMentors = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -49,10 +49,6 @@ export const Chats = CatchAsyncError(async (req: Request, res: Response, next: N
         }
         const data = {senderId,receiverId};
         const chat = await startChat(data, res);
-        res.status(201).json({
-            success : "true",
-            chat
-        })
 
     } catch (error: any) {
         return next(new ErrorHandler(error.message, 500));
@@ -66,6 +62,23 @@ export const onGetChatsRecords = CatchAsyncError(async (req: Request, res: Respo
             return res.status(400).json({ message: "UserID is required." });
         }
         const chatRecords = await getChatRecords(userId, res);
+        res.status(201).json({
+            success : "true",
+            chatRecords
+        })
+
+    } catch (error: any) {
+        return next(new ErrorHandler(error.message, 500));
+    }
+});
+
+export const onGetAllMessages = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { chatId } = req.body;
+        if (!chatId) {
+            return res.status(400).json({ message: "chatID is required." });
+        }
+        const chatRecords = await GetAllMessages(chatId, res);
         res.status(201).json({
             success : "true",
             chatRecords

@@ -3,7 +3,6 @@ import Users from "../Models/users.model";
 import Message from "../Models/message.model";
 import ChatHistory from "../Models/chatHistory.model";
 import { Response } from "express";
-import { CatchAsyncError } from "../midlleware/catchAsyncError";
 import mongoose from "mongoose";
 
 export const addMentor = async (body: any, res: any) => {
@@ -18,7 +17,7 @@ export const addMentor = async (body: any, res: any) => {
 };
 
 export const getChatRecords = async (userId: string, res: any) => {
-    const chatRecords = await Chat.findOne({ userId: new mongoose.Types.ObjectId(userId) });
+    const chatRecords = await ChatHistory.findOne({ userId: new mongoose.Types.ObjectId(userId) });
     console.log(chatRecords)
     if (!chatRecords) {
         return res.status(404).json({ message: "No Chat Record." });
@@ -26,6 +25,14 @@ export const getChatRecords = async (userId: string, res: any) => {
     return chatRecords;
 };
 
+export const GetAllMessages = async (chatId: string, res: any) => {
+    const messageRecords = await Message.find({ chatId: chatId }).sort({ timestamp: 1 });
+    
+    if (!messageRecords) {
+        return res.status(404).json({ message: "No Chat Record." });
+    }
+    return messageRecords;
+};
 
 export const getRecommendedMentors = async (currentUserId: string, res: Response) => {
     if (!currentUserId) {
@@ -37,53 +44,66 @@ export const getRecommendedMentors = async (currentUserId: string, res: Response
     return users;
 };
 
-export const startChat = async (data: { senderId: any, receiverId: any }, res: Response) => {
-    try {
+
+export const startChat = async (data: { senderId: any, receiverId: any }, res: Response) => { 
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try { 
         const { senderId, receiverId } = data;
 
-        if (!senderId || !receiverId) {
+        if (!senderId || !receiverId) { 
+            await session.abortTransaction();
+            session.endSession();
             return res.status(400).json({ message: "Both senderId and receiverId are required." });
         }
 
-        const sender = await Users.findById(senderId);
-        const receiver = await Users.findById(receiverId);
-        if (!sender || !receiver) {
+        const sender = await Users.findById(senderId).session(session);
+        const receiver = await Users.findById(receiverId).session(session);
+
+        if (!sender || !receiver) { 
+            await session.abortTransaction();
+            session.endSession();
             return res.status(404).json({ message: "Sender or receiver not found." });
         }
 
-        let chat = await Chat.findOne({ participants: { $all: [senderId, receiverId] } });
+        let chat = await Chat.findOne({ participants: { $all: [senderId, receiverId] } }).session(session);
+        if (!chat) { 
+            chat = (await Chat.create([{ participants: [senderId, receiverId], messages: [] }], { session }))[0];
 
-        if (!chat) {
-            chat = await Chat.create({
-                participants: [senderId, receiverId],
-                messages: []
-            });
+            const senderChatHistory =await ChatHistory.findOneAndUpdate(
+                { userId: senderId },
+                { $setOnInsert: { userId: senderId }, $addToSet: { chats: chat._id } },
+                { upsert: true, new: true, session }
+            );
 
-            let senderChatHistory = await ChatHistory.findOne({ userId: senderId });
-            if (!senderChatHistory) {
-                senderChatHistory = await ChatHistory.create({ userId: senderId, chats: [] });
-                await Users.findByIdAndUpdate(senderId, { chatHistory: senderChatHistory._id });
-            }
-            senderChatHistory.chats.push(chat._id);
-            await senderChatHistory.save();
-            console.log('senderhis',senderChatHistory)
+            const receiverChatHistory = await ChatHistory.findOneAndUpdate(
+                { userId: receiverId },
+                { $setOnInsert: { userId: receiverId }, $addToSet: { chats: chat?._id } },
+                { upsert: true, new: true, session }
+            );
 
-            let receiverChatHistory = await ChatHistory.findOne({ userId: receiverId });
-            if (!receiverChatHistory) {
-                receiverChatHistory = await ChatHistory.create({ userId: receiverId, chats: [] });
-                await Users.findByIdAndUpdate(receiverId, { chatHistory: receiverChatHistory._id });
-            }
-            receiverChatHistory.chats.push(chat._id);
-            await receiverChatHistory.save();
-            console.log('receverhis',receiverChatHistory)
+            await Users.findByIdAndUpdate(senderId, {$push:{chatHistory:senderChatHistory._id}},{new:true,session});
+            await Users.findByIdAndUpdate(receiverId,{$push:{chatHistory : receiverChatHistory._id}},{new:true, session});
+
+            await session.commitTransaction();
+            session.endSession();
+
+            return res.status(201).json({ chat, message: "Chat created successfully." });
+        } else {
+            await session.abortTransaction();
+            session.endSession();
+            return res.status(200).json({ chat, message: "Chat already exists." });
         }
-        return chat;
-    } catch (error) {
+    } catch (error) { 
+        await session.abortTransaction();
+        session.endSession();
         console.error("Error starting chat:", error);
         return res.status(500).json({ message: "Internal Server Error" });
     }
 };
 
+ 
 
 export const createMessage = async (data: { chatId: any, senderId: string, message: string }, res: Response) => {
     const { chatId, senderId, message } = data;

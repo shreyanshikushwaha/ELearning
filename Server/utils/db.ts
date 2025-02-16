@@ -1,17 +1,24 @@
- import mongoose from "mongoose";
- require('dotenv').config();
+import mongoose from "mongoose";
+require('dotenv').config();
 
- const dbUrl:string = process.env.DB_URL || '';
+const connectDB = async () => {
+    try {
+        const uri = process.env.MONGODB_URI;
+        if (!uri) {
+            throw new Error('MONGODB_URI is not defined in environment variables');
+        }
 
- const connectDB = async() => {
-    try{
-        await mongoose.connect(dbUrl).then((data:any)=>{
-            console.log(`database connected with ${data.connection.host}`)
-        })
-    }catch (error:any){
-        console.log(error.message);
-        setTimeout(connectDB,5000);
+        const options = {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+        };
+
+        await mongoose.connect(uri);
+        console.log('MongoDB connection string:', uri.replace(/:[^:]*@/, ':****@')); // Logs URI with hidden password
+    } catch (error) {
+        console.error('MongoDB connection error:', error);
+        throw error; // Re-throw the error to be caught by the server
     }
- }
+};
 
- export default connectDB;
+export default connectDB;
