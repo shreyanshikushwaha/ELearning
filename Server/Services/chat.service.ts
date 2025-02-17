@@ -18,7 +18,6 @@ export const addMentor = async (body: any, res: any) => {
 
 export const getChatRecords = async (userId: string, res: any) => {
     const chatRecords = await ChatHistory.findOne({ userId: new mongoose.Types.ObjectId(userId) });
-    console.log(chatRecords)
     if (!chatRecords) {
         return res.status(404).json({ message: "No Chat Record." });
     }

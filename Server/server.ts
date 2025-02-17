@@ -41,3 +41,5 @@ httpServer.listen(process.env.PORT, async () => {
         process.exit(1); // Exit the process if DB connection fails
     }
 });
+
+export { io };

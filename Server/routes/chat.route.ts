@@ -1,5 +1,7 @@
 import  express  from "express";
 import { ListRecommendedMentors,Chats,AddMentors, onSendMessage, onGetChatsRecords,onGetAllMessages } from "../controllers/chat.controller";
+import { Server } from "socket.io";
+
 const chatRouter = express.Router();
 
 chatRouter.get("/see-all-Mentors",ListRecommendedMentors);

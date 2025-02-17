@@ -36,7 +36,6 @@ app.get("/test", (Request, Response, NextFunction) => {
 
 //unknown routes
 app.all("*", (Request, Response, NextFunction) => {
-    console.log('im here')
     const err = new Error(`Route $(req.originalUrl) not found`) as any;
     err.statusCode = 404;
     NextFunction(err);
