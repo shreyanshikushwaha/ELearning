@@ -17,19 +17,12 @@ const generateChatId = (): string => {
 
 const ChatHistorySchema: Schema = new Schema(
     {
-        Id: { type: String, unique: true, index: true, generateChatId},
+        Id: { type: String, unique: true, index: true, default:generateChatId},
         userId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users', required: true },
         chats: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Chat' }]
     },
     { timestamps: true }
 );
-
-ChatHistorySchema.pre('save', async function (next) {
-    if (!this.chatId) {
-        this.chatId = generateChatId();
-    }
-    next();
-})
 
 const ChatHistory = mongoose.model<IChatHistory>('ChatHistory', ChatHistorySchema);
 export default ChatHistory;

@@ -30,8 +30,14 @@ const io = new SocketIOServer(httpServer, {
 initializeSocket(io);
 
 //create server
-console.log(process.env.PORT);
-httpServer.listen(process.env.PORT, () => {
-    console.log(`server is conected with port ${process.env.PORT}`);
-    connectDB();//calling connect db function
-})
+console.log(`Attempting to start server on port: ${process.env.PORT}`);
+httpServer.listen(process.env.PORT, async () => {
+    try {
+        console.log(`Server is listening on port ${process.env.PORT}`);
+        await connectDB(); // Making the connection async
+        console.log('Database connected successfully');
+    } catch (error) {
+        console.error('Database connection failed:', error);
+        process.exit(1); // Exit the process if DB connection fails
+    }
+});
