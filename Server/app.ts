@@ -16,9 +16,9 @@ app.use(express.json({ limit: "50mb" }));
 app.use(cookieParser());
 
 //cors
-// app.use(cors({
-//     origin : process.env.ORIGIN
-// }));
+app.use(cors({
+    origin : process.env.ORIGIN
+}));
 
 //roytes  
 // app.use("/api/v1", userRouter)
@@ -36,7 +36,6 @@ app.get("/test", (Request, Response, NextFunction) => {
 
 //unknown routes
 app.all("*", (Request, Response, NextFunction) => {
-    console.log('im here')
     const err = new Error(`Route $(req.originalUrl) not found`) as any;
     err.statusCode = 404;
     NextFunction(err);

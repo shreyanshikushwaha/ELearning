@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import ErrorHandler from "../utils/Errorhandler";
 import { CatchAsyncError } from "../midlleware/catchAsyncError";
 import { getRecommendedMentors, startChat, addMentor,createMessage, getChatRecords, GetAllMessages } from "../Services/chat.service";
+import { io } from "../server";
 
 export const AddMentors = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -91,12 +92,19 @@ export const onGetAllMessages = CatchAsyncError(async (req: Request, res: Respon
 
 export const onSendMessage = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { chatId,senderId,message  } = req.body;
+        const { chatId,senderId,receiverId,message  } = req.body;
         if (!senderId || !chatId || !message) {
             return res.status(400).json({ message: "Required all fields." });
         }
         const data = {chatId,senderId,message};
         const chat = await createMessage(data, res);
+
+        io.to(receiverId).emit("receive_message", {
+            senderId,
+            message,
+            timestamp: new Date().toISOString(),
+        });
+
         res.status(201).json({
             success : "true",
             chat

@@ -10,7 +10,6 @@ export const initializeSocket = (io: Server) => {
 
         groupHandler(io, socket);
 
-        // Handle disconnection
         socket.on('disconnect', () => {
             console.log(`User disconnected: ${socket.id}`);
         });
